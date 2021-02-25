@@ -1,8 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-//import App from './App';
-import reportWebVitals from './reportWebVitals';
+// import App from './App';
 
 // ReactDOM.render(
 //   <React.StrictMode>
@@ -11,96 +10,115 @@ import reportWebVitals from './reportWebVitals';
 //   document.getElementById('root')
 // );
 
-// function Clock(props) {
-//   return (
-//     <div>
-//       <h1>Hello, world!</h1>
-//       <h2>It is {props.date.toLocaleTimeString()}.</h2>
-//     </div>
-//   );
-// }
-
-function FormattedDate(props) {
-  return <h2>It is {props.date.toLocaleTimeString()}.</h2>;
+function Square(props) {
+  return (
+    <button className="square" onClick={props.onClick}>
+      {props.value}
+    </button>
+  );
 }
 
-class Clock extends React.Component {
+class Board extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {date: new Date()};
+    this.state = {
+      squares: Array(9).fill(null),
+      xIsNext: true,
+    };
   }
 
-  //생명 주기 메서드
-
-  //마운팅 : clock이 처음 dom에 렌더링 될 때마다 타이머 설정
-  componentDidMount() {
-    this.timerID = setInterval(
-      () => this.tick(),
-      1000
-    );
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.timerID);
-  }
-
-  tick() {
-    //state는 직접 수정ㄴ
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
-      date: new Date()
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
     });
   }
 
+  renderSquare(i) {
+    return (
+      <Square
+        value={this.state.squares[i]}
+        onClick={() => this.handleClick(i)}
+      />
+    );
+  }
+
   render() {
+    const winner = calculateWinner(this.state.squares);
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
     return (
       <div>
-        <h1>Hello, world!</h1>
-        <FormattedDate date={this.state.date} />
+        <div className="status">{status}</div>
+        <div className="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(3)}
+          {this.renderSquare(4)}
+          {this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}
+          {this.renderSquare(7)}
+          {this.renderSquare(8)}
+        </div>
       </div>
     );
   }
 }
 
-class Toggle extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {isToggleOn: true};
-
-    // This binding is necessary to make `this` work in the callback
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  handleClick() {
-    this.setState(prevState => ({
-      isToggleOn: !prevState.isToggleOn
-    }));
-  }
-
+class Game extends React.Component {
   render() {
     return (
-      <button onClick={(e) => this.handleClick(e)}>{this.state.isToggleOn ? 'ON' : 'OFF'}</button>
-      // <button onClick={this.handleClick}>
-      //   {this.state.isToggleOn ? 'ON' : 'OFF'}
-      // </button>
+      <div className="game">
+        <div className="game-board">
+          <Board />
+        </div>
+        <div className="game-info">
+          <div>{/* status */}</div>
+          <ol>{/* TODO */}</ol>
+        </div>
+      </div>
     );
   }
 }
 
-function App() {
-  return (
-    <div>
-      <Toggle />
-      <Clock />
-      <Clock />
-      <Clock />
-    </div>
-  );
-}
+// ========================================
 
 ReactDOM.render(
-  <App />,
+  <Game />,
   document.getElementById('root')
 );
 
-reportWebVitals();
-
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
